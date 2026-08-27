@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+<form method="post">
+
+    {% csrf_token %}
+    {{ form.title.label  }}
+    {{ form.title }}
+    {{ form.title.errors }}
+    <hr>
+    {{ form.description.label  }}
+    {{ form.description }}
+    {{ form.description.errors }}
+    <hr>
+
+    <button type="submit">
+        ثبت
+    </button>
+    
+</form>
+
+{% for list in lists %}  
+    <p> {{ forloop.counter }} - {{ list.title }} - {{ list.description }} </p>
+    
+<form method="post" action="{% url 'delete' list.id %}">
+        {% csrf_token %}
+        <button type="submit">حذف</button>
+</form>
+    <a href="{% url 'update' list.id %}">ویرایش</a>
+{% endfor %}  
+
+<form method="post" action="{% url 'logout' %}">
+
+    {% csrf_token %}
+
+
+    <button type="submit">
+        logout
+    </button>
+    
+</form>
+
+</body>
+</html>
