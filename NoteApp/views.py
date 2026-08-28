@@ -3,6 +3,9 @@ from django.contrib.auth.decorators import login_required
 from .models import List
 from .forms import ListForm
 from django.contrib.auth.forms import UserCreationForm
+from .serializers import ListSerializer
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 # Create your views here.
 
@@ -75,3 +78,9 @@ def register(request):
             "form": form,
         }
     )
+    
+@api_view(['GET'])
+def api_lists(request):
+    lists = List.objects.filter(user=request.user)
+    serializer = ListSerializer(lists, many=True)
+    return Response(serializer.data)
