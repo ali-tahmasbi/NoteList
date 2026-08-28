@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoteList — ویرایش یادداشت</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #07070f;
+      --card: #111127;
+      --border: rgba(139,92,246,0.18);
+      --v1: #7c3aed; --v2: #6366f1; --blue: #3b82f6;
+      --glow: rgba(124,58,237,0.22);
+      --text: #f1f5f9; --text2: #94a3b8; --text3: #475569;
+      --err: #f43f5e; --err-bg: rgba(244,63,94,0.1);
+      --warn: #f59e0b;
+      --font: 'Vazirmatn', system-ui, sans-serif;
+      --r: 16px;
+    }
+
+    body {
+      font-family: var(--font); background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      overflow: hidden; position: relative; padding: 20px;
+    }
+
+    .orb { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; }
+    .orb-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%); top: -20%; left: -10%; animation: d1 14s ease-in-out infinite alternate; }
+    .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%); bottom: -20%; right: -10%; animation: d2 11s ease-in-out infinite alternate; }
+    @keyframes d1 { to { transform: translate(5%, 8%); } }
+    @keyframes d2 { to { transform: translate(-5%, -8%); } }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px);
+      background-size: 48px 48px; z-index: 0;
+    }
+
+    .card {
+      position: relative; z-index: 1;
+      background: linear-gradient(145deg, rgba(20,20,45,0.9), rgba(14,14,32,0.95));
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border); border-radius: 28px;
+      padding: 48px 44px; width: 100%; max-width: 500px;
+      box-shadow: 0 0 0 1px rgba(139,92,246,0.08), 0 30px 80px rgba(0,0,0,0.6);
+      animation: up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes up { from { opacity: 0; transform: translateY(30px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon {
+      width: 44px; height: 44px; background: linear-gradient(135deg, var(--v1), var(--blue));
+      border-radius: 13px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 24px var(--glow); flex-shrink: 0;
+    }
+    .logo-name { font-size: 20px; font-weight: 800; background: linear-gradient(90deg, #a78bfa, #60a5fa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .badge {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+      background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(59,130,246,0.2));
+      border: 1px solid rgba(139,92,246,0.3); border-radius: 20px; padding: 5px 14px;
+      color: #a78bfa;
+    }
+
+    .heading { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .sub { font-size: 14px; color: var(--text2); margin-bottom: 32px; line-height: 1.6; }
+
+    .note-preview {
+      background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.15);
+      border-radius: var(--r); padding: 12px 16px;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 28px;
+    }
+    .note-preview svg { flex-shrink: 0; color: #a78bfa; }
+    .note-preview span { font-size: 13px; color: var(--text2); }
+    .note-preview strong { color: var(--text); font-weight: 600; }
+
+    .form-group { margin-bottom: 22px; }
+    .label-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .label { font-size: 13px; font-weight: 500; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+    .char-count { font-size: 11px; color: var(--text3); transition: color 0.2s; }
+    .char-count.warn { color: var(--warn); }
+    .char-count.over { color: var(--err); }
+
+    #id_title, #id_description {
+      width: 100%; background: rgba(255,255,255,0.04);
+      border: 1.5px solid var(--border); border-radius: var(--r);
+      padding: 13px 18px; font-size: 15px; font-family: var(--font);
+      color: var(--text); outline: none; transition: all 0.25s; resize: vertical;
+    }
+    #id_title:focus, #id_description:focus {
+      border-color: var(--v2); background: rgba(99,102,241,0.05); box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+    }
+    #id_title::placeholder, #id_description::placeholder { color: var(--text3); }
+
+    .errors { margin-top: 8px; }
+    .error-item {
+      font-size: 12px; color: var(--err); background: var(--err-bg);
+      border: 1px solid rgba(244,63,94,0.2); padding: 7px 12px; border-radius: 8px;
+      margin-top: 4px; display: flex; align-items: center; gap: 6px;
+    }
+
+    .btn-row { display: flex; gap: 12px; margin-top: 4px; }
+
+    .btn-back {
+      display: flex; align-items: center; gap: 8px;
+      flex: 1; justify-content: center;
+      padding: 13px; border-radius: var(--r);
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: var(--text2); font-size: 14px; font-family: var(--font);
+      text-decoration: none; transition: all 0.2s;
+    }
+    .btn-back:hover { background: rgba(255,255,255,0.08); color: var(--text); border-color: var(--border); }
+
+    .btn-save {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      flex: 2; padding: 13px;
+      background: linear-gradient(135deg, var(--v1), var(--blue));
+      border: none; border-radius: var(--r); color: #fff;
+      font-size: 14px; font-weight: 600; font-family: var(--font);
+      cursor: pointer; transition: all 0.25s;
+      box-shadow: 0 4px 20px var(--glow); position: relative; overflow: hidden;
+    }
+    .btn-save::after {
+      content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transform: skewX(-20deg); transition: left 0.5s;
+    }
+    .btn-save:hover::after { left: 160%; }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 28px var(--glow); }
+    .btn-save:active { transform: translateY(0); }
+
+    @media (max-width: 480px) {
+      .card { padding: 32px 20px; }
+      .btn-row { flex-direction: column-reverse; }
+      .btn-back, .btn-save { flex: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="card">
+    <div class="card-header">
+      <a class="logo" href="{% url 'home' %}">
+        <div class="logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+          </svg>
+        </div>
+        <span class="logo-name">NoteList</span>
+      </a>
+      <span class="badge">ویرایش</span>
+    </div>
+
+    <h2 class="heading">ویرایش یادداشت ✏️</h2>
+    <p class="sub">محتوای یادداشت را به روز کن</p>
+
+    <div class="note-preview">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>در حال ویرایش: <strong>{{ list.title }}</strong></span>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <div class="label-row">
+          <label class="label" for="id_title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/></svg>
+            عنوان
+          </label>
+          <span class="char-count" id="titleCount">0 / 20</span>
+        </div>
+        {{ form.title }}
+        {% if form.title.errors %}
+        <div class="errors">
+          {% for e in form.title.errors %}
+          <div class="error-item">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {{ e }}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label class="label" for="id_description">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+            توضیحات
+          </label>
+          <span class="char-count" id="descCount">0 / 100</span>
+        </div>
+        {{ form.description }}
+        {% if form.description.errors %}
+        <div class="errors">
+          {% for e in form.description.errors %}
+          <div class="error-item">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {{ e }}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="btn-row">
+        <a class="btn-back" href="{% url 'home' %}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          بازگشت
+        </a>
+        <button type="submit" class="btn-save">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          ذخیره تغییرات
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Character counters
+    function updateCount(inputId, countId, max) {
+      const el = document.getElementById(inputId);
+      const counter = document.getElementById(countId);
+      if (!el || !counter) return;
+      const update = () => {
+        const len = el.value.length;
+        counter.textContent = `${len} / ${max}`;
+        counter.className = 'char-count' + (len >= max ? ' over' : len >= max * 0.8 ? ' warn' : '');
+      };
+      el.addEventListener('input', update);
+      update();
+    }
+    updateCount('id_title', 'titleCount', 20);
+    updateCount('id_description', 'descCount', 100);
+  </script>
+</body>
+</html>

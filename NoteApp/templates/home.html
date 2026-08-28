@@ -1,49 +1,778 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoteList — یادداشت‌های من</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #07070f;
+      --surface: #0d0d1a;
+      --card: #111127;
+      --card-hov: #161635;
+      --border: rgba(139,92,246,0.14);
+      --border2: rgba(139,92,246,0.28);
+      --v1: #7c3aed; --v2: #6366f1; --blue: #3b82f6;
+      --glow: rgba(124,58,237,0.22);
+      --text: #f1f5f9; --text2: #94a3b8; --text3: #475569;
+      --success: #10b981; --danger: #f43f5e; --warn: #f59e0b;
+      --font: 'Vazirmatn', system-ui, sans-serif;
+      --r: 16px; --r-lg: 24px;
+      --nav-h: 68px;
+    }
+
+    body {
+      font-family: var(--font); background: var(--bg); color: var(--text);
+      min-height: 100vh; overflow-x: hidden;
+    }
+
+    /* ─── Background ─── */
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 800px 600px at 0% 0%, rgba(124,58,237,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 600px 500px at 100% 100%, rgba(59,130,246,0.08) 0%, transparent 60%),
+        linear-gradient(rgba(139,92,246,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139,92,246,0.03) 1px, transparent 1px);
+      background-size: auto, auto, 48px 48px, 48px 48px;
+    }
+
+    /* ─── Navbar ─── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      height: var(--nav-h);
+      background: rgba(7,7,15,0.85);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px;
+      box-shadow: 0 1px 40px rgba(0,0,0,0.4);
+    }
+
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--v1), var(--blue));
+      border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px var(--glow);
+      flex-shrink: 0;
+    }
+    .nav-logo-name {
+      font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+
+    .user-pill {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 100px; padding: 6px 14px 6px 8px;
+    }
+    .user-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--v1), var(--blue));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: white; flex-shrink: 0;
+    }
+    .user-name { font-size: 13px; font-weight: 500; color: var(--text2); }
+
+    .btn-logout {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2);
+      border-radius: 10px; padding: 8px 14px;
+      color: #fb7185; font-size: 13px; font-weight: 500; font-family: var(--font);
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .btn-logout:hover { background: rgba(244,63,94,0.15); color: #fff; border-color: rgba(244,63,94,0.4); }
+
+    /* ─── Main layout ─── */
+    main {
+      position: relative; z-index: 1;
+      max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px;
+    }
+
+    /* ─── Hero ─── */
+    .hero { margin-bottom: 40px; }
+    .hero-greeting { font-size: 32px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.5px; }
+    .hero-greeting span { background: linear-gradient(90deg, #a78bfa, #60a5fa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-sub { font-size: 15px; color: var(--text2); }
+
+    .stats-row { display: flex; gap: 16px; margin-top: 24px; flex-wrap: wrap; }
+    .stat-card {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px 20px;
+      min-width: 150px;
+    }
+    .stat-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .stat-val { font-size: 24px; font-weight: 700; line-height: 1; }
+    .stat-label { font-size: 12px; color: var(--text3); margin-top: 3px; }
+
+    /* ─── Toolbar ─── */
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; gap: 12px; flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      position: relative; flex: 1; min-width: 200px; max-width: 360px;
+    }
+    .search-wrap svg { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events: none; }
+    #search {
+      width: 100%; background: var(--card); border: 1.5px solid var(--border);
+      border-radius: var(--r); padding: 11px 44px 11px 16px;
+      font-size: 14px; font-family: var(--font); color: var(--text);
+      outline: none; transition: all 0.2s;
+    }
+    #search:focus { border-color: var(--v2); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    #search::placeholder { color: var(--text3); }
+
+    .btn-new {
+      display: flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--v1), var(--blue));
+      border: none; border-radius: var(--r); padding: 11px 20px;
+      color: #fff; font-size: 14px; font-weight: 600; font-family: var(--font);
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+      box-shadow: 0 4px 20px var(--glow);
+    }
+    .btn-new:hover { transform: translateY(-2px); box-shadow: 0 8px 28px var(--glow); }
+    .btn-new:active { transform: translateY(0); }
+
+    /* ─── Notes grid ─── */
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    /* Note card */
+    .note-card {
+      position: relative;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 0;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: default;
+      animation: cardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .note-card:hover {
+      background: var(--card-hov);
+      border-color: var(--border2);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(139,92,246,0.15);
+    }
+
+    .card-accent {
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+    }
+    .card-body { padding: 20px; }
+    .card-title {
+      font-size: 16px; font-weight: 700; color: var(--text);
+      margin-bottom: 10px; line-height: 1.4;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .card-desc {
+      font-size: 13px; color: var(--text2); line-height: 1.7;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 20px; padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .card-num {
+      font-size: 11px; color: var(--text3);
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 20px; padding: 3px 10px;
+    }
+    .card-actions { display: flex; gap: 8px; }
+
+    .btn-card {
+      width: 32px; height: 32px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid transparent; cursor: pointer;
+      transition: all 0.2s; background: transparent;
+    }
+    .btn-edit { color: var(--text3); border-color: var(--border); }
+    .btn-edit:hover { background: rgba(99,102,241,0.15); border-color: var(--v2); color: #a78bfa; }
+    .btn-del { color: var(--text3); border-color: var(--border); }
+    .btn-del:hover { background: rgba(244,63,94,0.12); border-color: var(--danger); color: var(--danger); }
+
+    /* Delete confirm inline */
+    .del-confirm {
+      display: none; align-items: center; gap: 8px;
+      position: absolute; inset: 0; border-radius: var(--r-lg);
+      background: rgba(7,7,15,0.92); backdrop-filter: blur(4px);
+      justify-content: center; flex-direction: column; z-index: 10;
+      animation: fadeIn 0.2s ease;
+    }
+    .del-confirm.show { display: flex; }
+    .del-confirm p { font-size: 14px; color: var(--text2); margin-bottom: 4px; }
+    .del-confirm strong { color: var(--text); }
+    .del-btns { display: flex; gap: 10px; }
+    .btn-cancel-del {
+      padding: 8px 18px; border-radius: 10px;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      color: var(--text2); font-size: 13px; font-family: var(--font);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-cancel-del:hover { background: rgba(255,255,255,0.1); }
+    .btn-confirm-del {
+      padding: 8px 18px; border-radius: 10px;
+      background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3);
+      color: var(--danger); font-size: 13px; font-weight: 600; font-family: var(--font);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-confirm-del:hover { background: var(--danger); color: #fff; }
+
+    /* ─── Empty state ─── */
+    .empty {
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      padding: 80px 20px; text-align: center;
+    }
+    .empty.show { display: flex; }
+    .empty-icon {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(59,130,246,0.15));
+      border: 1px solid var(--border); border-radius: 24px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+    }
+    .empty h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .empty p { font-size: 14px; color: var(--text3); max-width: 280px; line-height: 1.7; margin-bottom: 24px; }
+    .btn-empty {
+      display: flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--v1), var(--blue));
+      border: none; border-radius: var(--r); padding: 12px 22px;
+      color: #fff; font-size: 14px; font-weight: 600; font-family: var(--font);
+      cursor: pointer; box-shadow: 0 4px 20px var(--glow); transition: all 0.2s;
+    }
+    .btn-empty:hover { transform: translateY(-2px); box-shadow: 0 8px 28px var(--glow); }
+
+    /* ─── Skeleton ─── */
+    .skeleton-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .skeleton-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+    .sk { background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+    /* ─── Modal ─── */
+    .backdrop {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .backdrop.open { display: flex; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+      background: linear-gradient(145deg, #141430, #0e0e24);
+      border: 1px solid var(--border2);
+      border-radius: 28px; padding: 36px;
+      width: 100%; max-width: 480px;
+      box-shadow: 0 0 0 1px rgba(139,92,246,0.12), 0 40px 80px rgba(0,0,0,0.7);
+      animation: modalIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.93) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .modal-title { font-size: 20px; font-weight: 700; }
+    .modal-badge {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+      background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(59,130,246,0.2));
+      border: 1px solid rgba(139,92,246,0.3); border-radius: 20px; padding: 4px 12px;
+      color: #a78bfa;
+    }
+    .btn-close {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text3); cursor: pointer; transition: all 0.2s;
+    }
+    .btn-close:hover { background: rgba(244,63,94,0.12); border-color: var(--danger); color: var(--danger); }
+
+    .form-group { margin-bottom: 22px; }
+    .form-label {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 8px;
+    }
+    .char-count { font-size: 11px; color: var(--text3); transition: color 0.2s; }
+    .char-count.warn { color: var(--warn); }
+    .char-count.over { color: var(--danger); }
+
+    .modal input[type="text"], .modal textarea {
+      width: 100%; background: rgba(255,255,255,0.04);
+      border: 1.5px solid var(--border); border-radius: var(--r);
+      padding: 13px 16px; font-size: 15px; font-family: var(--font);
+      color: var(--text); outline: none; transition: all 0.25s; resize: none;
+    }
+    .modal input[type="text"]:focus, .modal textarea:focus {
+      border-color: var(--v2); background: rgba(99,102,241,0.05);
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+    }
+    .modal input[type="text"]::placeholder, .modal textarea::placeholder { color: var(--text3); }
+
+    .modal-footer { display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px; }
+    .btn-cancel {
+      padding: 12px 22px; border-radius: var(--r);
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: var(--text2); font-size: 14px; font-family: var(--font);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-cancel:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+    .btn-save {
+      padding: 12px 28px; border-radius: var(--r);
+      background: linear-gradient(135deg, var(--v1), var(--blue));
+      border: none; color: #fff;
+      font-size: 14px; font-weight: 600; font-family: var(--font);
+      cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 4px 16px var(--glow);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .btn-save:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--glow); }
+    .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Spinner */
+    .spinner {
+      width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.6s linear infinite; display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Toast ─── */
+    #toasts {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 300; display: flex; flex-direction: column; gap: 10px;
+      align-items: center; pointer-events: none;
+    }
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--card);
+      border: 1px solid var(--border); border-radius: 100px;
+      padding: 12px 20px; font-size: 14px; font-weight: 500;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      animation: toastIn 0.4s cubic-bezier(0.16,1,0.3,1);
+      pointer-events: auto; white-space: nowrap;
+    }
+    .toast.success { border-color: rgba(16,185,129,0.3); color: var(--success); }
+    .toast.error { border-color: rgba(244,63,94,0.3); color: var(--danger); }
+    .toast.info { border-color: var(--border2); color: #a78bfa; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes toastOut { to { opacity: 0; transform: translateY(16px) scale(0.9); } }
+
+    /* ─── Accent color presets ─── */
+    .accent-0 { --accent-a: #7c3aed; --accent-b: #3b82f6; }
+    .accent-1 { --accent-a: #0891b2; --accent-b: #6366f1; }
+    .accent-2 { --accent-a: #059669; --accent-b: #0891b2; }
+    .accent-3 { --accent-a: #d97706; --accent-b: #ef4444; }
+    .accent-4 { --accent-a: #db2777; --accent-b: #7c3aed; }
+    .accent-5 { --accent-a: #2563eb; --accent-b: #7c3aed; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 640px) {
+      nav { padding: 0 16px; }
+      .nav-logo-name { display: none; }
+      .user-name { display: none; }
+      main { padding: 24px 16px 80px; }
+      .hero-greeting { font-size: 24px; }
+      .modal { padding: 24px 20px; }
+    }
+  </style>
 </head>
 <body>
-<form method="post">
 
-    {% csrf_token %}
-    {{ form.title.label  }}
-    {{ form.title }}
-    {{ form.title.errors }}
-    <hr>
-    {{ form.description.label  }}
-    {{ form.description }}
-    {{ form.description.errors }}
-    <hr>
+  <!-- ─── Navbar ─── -->
+  <nav>
+    <a class="nav-logo" href="{% url 'home' %}">
+      <div class="nav-logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+      </div>
+      <span class="nav-logo-name">NoteList</span>
+    </a>
 
-    <button type="submit">
-        ثبت
-    </button>
-    
-</form>
-
-{% for list in lists %}  
-    <p> {{ forloop.counter }} - {{ list.title }} - {{ list.description }} </p>
-    
-<form method="post" action="{% url 'delete' list.id %}">
+    <div class="nav-right">
+      <div class="user-pill">
+        <div class="user-avatar" id="navAvatar">?</div>
+        <span class="user-name" id="navUser">{{ request.user.username }}</span>
+      </div>
+      <form method="post" action="{% url 'logout' %}" style="display:contents">
         {% csrf_token %}
-        <button type="submit">حذف</button>
-</form>
-    <a href="{% url 'update' list.id %}">ویرایش</a>
-{% endfor %}  
+        <button type="submit" class="btn-logout">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          خروج
+        </button>
+      </form>
+    </div>
+  </nav>
 
-<form method="post" action="{% url 'logout' %}">
+  <!-- ─── Main ─── -->
+  <main>
+    <!-- Hero -->
+    <div class="hero">
+      <h1 class="hero-greeting">سلام، <span id="heroName">{{ request.user.username }}</span> 👋</h1>
+      <p class="hero-sub">یادداشت‌هایت اینجان. هر وقت خواستی ویرایش یا اضافه کن.</p>
 
-    {% csrf_token %}
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(59,130,246,0.2));border:1px solid rgba(139,92,246,0.2)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div>
+            <div class="stat-val" id="statCount">—</div>
+            <div class="stat-label">یادداشت</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search" placeholder="جستجو در یادداشت‌ها...">
+      </div>
+      <button class="btn-new" onclick="openModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        یادداشت جدید
+      </button>
+    </div>
 
-    <button type="submit">
-        logout
-    </button>
-    
-</form>
+    <!-- Skeleton loading -->
+    <div class="skeleton-grid" id="skeleton">
+      {% for i in "123456" %}
+      <div class="skeleton-card">
+        <div style="height:4px;background:linear-gradient(90deg,rgba(139,92,246,0.3),rgba(59,130,246,0.3))"></div>
+        <div style="padding:20px">
+          <div class="sk" style="height:18px;width:60%;margin-bottom:12px"></div>
+          <div class="sk" style="height:13px;width:90%;margin-bottom:8px"></div>
+          <div class="sk" style="height:13px;width:75%;margin-bottom:8px"></div>
+          <div class="sk" style="height:13px;width:50%;margin-bottom:20px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid rgba(139,92,246,0.1)">
+            <div class="sk" style="height:22px;width:60px;border-radius:20px"></div>
+            <div style="display:flex;gap:6px">
+              <div class="sk" style="width:32px;height:32px;border-radius:9px"></div>
+              <div class="sk" style="width:32px;height:32px;border-radius:9px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
 
+    <!-- Empty state -->
+    <div class="empty" id="empty">
+      <div class="empty-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <h3>هنوز یادداشتی نداری</h3>
+      <p>اولین یادداشتت رو بساز و شروع کن!</p>
+      <button class="btn-empty" onclick="openModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        ساخت اولین یادداشت
+      </button>
+    </div>
+
+    <!-- Notes grid -->
+    <div class="notes-grid" id="grid"></div>
+  </main>
+
+  <!-- ─── Modal ─── -->
+  <div class="backdrop" id="backdrop" onclick="handleBackdropClick(event)">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">یادداشت جدید</h2>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="modal-badge" id="modalBadge">جدید</span>
+          <button class="btn-close" onclick="closeModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">
+          <span>عنوان</span>
+          <span class="char-count" id="titleCount">0 / 20</span>
+        </div>
+        <input type="text" id="mTitle" maxlength="20" placeholder="یه عنوان جذاب بنویس...">
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">
+          <span>توضیحات</span>
+          <span class="char-count" id="descCount">0 / 100</span>
+        </div>
+        <textarea id="mDesc" maxlength="100" rows="4" placeholder="یادداشتت رو اینجا بنویس..."></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal()">لغو</button>
+        <button class="btn-save" id="btnSave" onclick="saveNote()">
+          <span class="spinner" id="saveSpinner"></span>
+          <span id="saveText">ذخیره</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Toasts ─── -->
+  <div id="toasts"></div>
+
+  <script>
+    const CSRF = '{{ csrf_token }}';
+    const API  = '/home/api/';
+    const COLORS = ['accent-0','accent-1','accent-2','accent-3','accent-4','accent-5'];
+
+    let notes = [];
+    let editingId = null;
+
+    // ─── Init ───
+    const username = '{{ request.user.username }}';
+    document.getElementById('navAvatar').textContent = username.charAt(0).toUpperCase();
+
+    // ─── Fetch ───
+    async function fetchNotes() {
+      try {
+        const res = await fetch(API, { credentials: 'same-origin' });
+        if (!res.ok) throw new Error();
+        notes = await res.json();
+        render(notes);
+      } catch {
+        toast('خطا در بارگذاری یادداشت‌ها', 'error');
+        document.getElementById('skeleton').style.display = 'none';
+      }
+    }
+
+    function render(list) {
+      document.getElementById('skeleton').style.display = 'none';
+      document.getElementById('statCount').textContent = list.length;
+      const grid = document.getElementById('grid');
+      const empty = document.getElementById('empty');
+
+      if (!list.length) {
+        grid.innerHTML = '';
+        empty.classList.add('show');
+        return;
+      }
+      empty.classList.remove('show');
+      grid.innerHTML = list.map((n, i) => noteCard(n, i)).join('');
+      grid.querySelectorAll('.note-card').forEach((c, i) => {
+        c.style.animationDelay = `${i * 60}ms`;
+      });
+    }
+
+    function noteCard(n, i) {
+      const accent = COLORS[n.id % COLORS.length];
+      const titleSafe = escHtml(n.title);
+      const descSafe  = escHtml(n.description);
+      return `
+        <div class="note-card ${accent}" data-id="${n.id}">
+          <div class="card-accent"></div>
+          <div class="card-body">
+            <div class="card-title">${titleSafe}</div>
+            <div class="card-desc">${descSafe}</div>
+            <div class="card-footer">
+              <span class="card-num"># ${n.id}</span>
+              <div class="card-actions">
+                <button class="btn-card btn-edit" title="ویرایش" onclick="openEdit(${n.id})">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="btn-card btn-del" title="حذف" onclick="showDelConfirm(${n.id}, this)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="del-confirm" id="dc-${n.id}">
+            <p>حذف یادداشت <strong>«${titleSafe}»</strong>؟</p>
+            <div class="del-btns">
+              <button class="btn-cancel-del" onclick="hideDelConfirm(${n.id})">نه، لغو</button>
+              <button class="btn-confirm-del" onclick="deleteNote(${n.id})">بله، حذف کن</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // ─── Search ───
+    document.getElementById('search').addEventListener('input', e => {
+      const q = e.target.value.trim().toLowerCase();
+      if (!q) { render(notes); return; }
+      const filtered = notes.filter(n =>
+        n.title.toLowerCase().includes(q) || n.description.toLowerCase().includes(q)
+      );
+      render(filtered);
+    });
+
+    // ─── Modal ───
+    function openModal() {
+      editingId = null;
+      document.getElementById('mTitle').value = '';
+      document.getElementById('mDesc').value  = '';
+      document.getElementById('modalTitle').textContent = 'یادداشت جدید';
+      document.getElementById('modalBadge').textContent = 'جدید';
+      updateCounts();
+      document.getElementById('backdrop').classList.add('open');
+      setTimeout(() => document.getElementById('mTitle').focus(), 50);
+    }
+
+    function openEdit(id) {
+      const n = notes.find(x => x.id === id);
+      if (!n) return;
+      editingId = id;
+      document.getElementById('mTitle').value = n.title;
+      document.getElementById('mDesc').value  = n.description;
+      document.getElementById('modalTitle').textContent = 'ویرایش یادداشت';
+      document.getElementById('modalBadge').textContent = 'ویرایش';
+      updateCounts();
+      document.getElementById('backdrop').classList.add('open');
+      setTimeout(() => document.getElementById('mTitle').focus(), 50);
+    }
+
+    function closeModal() {
+      document.getElementById('backdrop').classList.remove('open');
+      editingId = null;
+    }
+
+    function handleBackdropClick(e) {
+      if (e.target === document.getElementById('backdrop')) closeModal();
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // ─── Char counters ───
+    function updateCounts() {
+      const t = document.getElementById('mTitle').value.length;
+      const d = document.getElementById('mDesc').value.length;
+      const tc = document.getElementById('titleCount');
+      const dc = document.getElementById('descCount');
+      tc.textContent = `${t} / 20`;
+      dc.textContent = `${d} / 100`;
+      tc.className = 'char-count' + (t >= 20 ? ' over' : t >= 16 ? ' warn' : '');
+      dc.className = 'char-count' + (d >= 100 ? ' over' : d >= 85 ? ' warn' : '');
+    }
+    document.getElementById('mTitle').addEventListener('input', updateCounts);
+    document.getElementById('mDesc').addEventListener('input', updateCounts);
+
+    // ─── Save ───
+    async function saveNote() {
+      const title = document.getElementById('mTitle').value.trim();
+      const description = document.getElementById('mDesc').value.trim();
+      if (!title) { document.getElementById('mTitle').focus(); shake(document.getElementById('mTitle')); return; }
+      if (!description) { document.getElementById('mDesc').focus(); shake(document.getElementById('mDesc')); return; }
+
+      const btn = document.getElementById('btnSave');
+      const spinner = document.getElementById('saveSpinner');
+      const saveText = document.getElementById('saveText');
+      btn.disabled = true; spinner.style.display = 'block'; saveText.textContent = 'در حال ذخیره...';
+
+      try {
+        const url    = editingId ? `${API}${editingId}/` : API;
+        const method = editingId ? 'PUT' : 'POST';
+        const res = await fetch(url, {
+          method, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+          body: JSON.stringify({ title, description })
+        });
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+
+        if (editingId) {
+          notes = notes.map(n => n.id === editingId ? data : n);
+          toast('یادداشت ویرایش شد ✓', 'success');
+        } else {
+          notes.unshift(data);
+          toast('یادداشت ذخیره شد ✓', 'success');
+        }
+        render(notes);
+        closeModal();
+      } catch(err) {
+        toast('خطا در ذخیره‌سازی. دوباره تلاش کن.', 'error');
+      } finally {
+        btn.disabled = false; spinner.style.display = 'none'; saveText.textContent = 'ذخیره';
+      }
+    }
+
+    // ─── Delete ───
+    function showDelConfirm(id, btn) {
+      document.getElementById(`dc-${id}`).classList.add('show');
+    }
+    function hideDelConfirm(id) {
+      document.getElementById(`dc-${id}`).classList.remove('show');
+    }
+
+    async function deleteNote(id) {
+      try {
+        const res = await fetch(`${API}${id}/`, {
+          method: 'DELETE', credentials: 'same-origin',
+          headers: { 'X-CSRFToken': CSRF }
+        });
+        if (!res.ok) throw new Error();
+        notes = notes.filter(n => n.id !== id);
+        render(notes);
+        toast('یادداشت حذف شد', 'info');
+      } catch {
+        toast('خطا در حذف یادداشت', 'error');
+        hideDelConfirm(id);
+      }
+    }
+
+    // ─── Toast ───
+    function toast(msg, type = 'info') {
+      const icons = {
+        success: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`,
+        error: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+        info: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+      };
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = icons[type] + msg;
+      document.getElementById('toasts').appendChild(el);
+      setTimeout(() => {
+        el.style.animation = 'toastOut 0.35s ease forwards';
+        setTimeout(() => el.remove(), 350);
+      }, 3000);
+    }
+
+    // ─── Utils ───
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function shake(el) {
+      el.style.animation = 'none';
+      el.style.borderColor = 'var(--danger)';
+      el.style.boxShadow = '0 0 0 4px rgba(244,63,94,0.15)';
+      setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 800);
+    }
+
+    // ─── Boot ───
+    fetchNotes();
+  </script>
 </body>
 </html>
