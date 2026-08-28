@@ -79,8 +79,31 @@ def register(request):
         }
     )
     
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def api_lists(request):
-    lists = List.objects.filter(user=request.user)
-    serializer = ListSerializer(lists, many=True)
-    return Response(serializer.data)
+    if request.method == "POST":
+        serializer = ListSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data)
+    
+    else:
+        lists = List.objects.filter(user=request.user)
+        serializer = ListSerializer(lists, many=True)
+        return Response(serializer.data)
+    
+@api_view(['PUT', 'DELETE'])
+def api_list_detail(request, id):
+    if request.method == "PUT":
+        list = List.objects.get(id=id, user=request.user)
+        serializer = ListSerializer(list, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+            
+    else:
+        list = List.objects.get(id=id, user=request.user)
+        list.delete()
+        return Response({'message': 'deleted'})
+        
+        
